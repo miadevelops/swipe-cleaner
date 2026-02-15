@@ -1,0 +1,154 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../providers/folder_provider.dart';
+
+/// Screen for selecting a folder to clean
+class FolderPickerScreen extends ConsumerWidget {
+  const FolderPickerScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final folderState = ref.watch(folderProvider);
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: AppColors.background(context),
+      appBar: AppBar(
+        title: const Text('Select Folder'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppConstants.spacingLg),
+          child: Column(
+            children: [
+              const Spacer(flex: 2),
+
+              // Folder Icon
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.accent(context).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.folder_open_rounded,
+                  size: 56,
+                  color: AppColors.accent(context),
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.spacingXl),
+
+              // Instruction Text
+              Text(
+                'Choose a folder to clean',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              Text(
+                'We recommend starting with\nyour Downloads folder',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.muted(context),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Error message
+              if (folderState.error != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingMd),
+                  decoration: BoxDecoration(
+                    color: AppColors.delete(context).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusCard),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: AppColors.delete(context),
+                      ),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Expanded(
+                        child: Text(
+                          folderState.error!,
+                          style: TextStyle(color: AppColors.delete(context)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppConstants.spacingMd),
+              ],
+
+              // Open Folder Picker Button
+              AppButton(
+                text: folderState.isLoading
+                    ? 'Opening...'
+                    : 'Open Folder Picker',
+                icon: Icons.folder_rounded,
+                isLoading: folderState.isLoading,
+                onPressed: folderState.isLoading
+                    ? null
+                    : () async {
+                        final success =
+                            await ref.read(folderProvider.notifier).pickFolder();
+                        if (success && context.mounted) {
+                          context.go('/swipe');
+                        }
+                      },
+              ),
+
+              const SizedBox(height: AppConstants.spacingXl),
+
+              // Info Text
+              Container(
+                padding: const EdgeInsets.all(AppConstants.spacingMd),
+                decoration: BoxDecoration(
+                  color: AppColors.surface(context),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusCard),
+                  border: Border.all(
+                    color: AppColors.muted(context).withOpacity(0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: AppColors.muted(context),
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    Expanded(
+                      child: Text(
+                        'We can only delete files you explicitly swipe left on',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.muted(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(flex: 2),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
