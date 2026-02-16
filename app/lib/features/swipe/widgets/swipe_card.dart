@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/file_utils.dart';
 import '../models/swipe_file.dart';
+import '../providers/thumbnail_provider.dart';
 
 /// Individual swipe card with file preview
-class SwipeCard extends StatelessWidget {
+class SwipeCard extends ConsumerWidget {
   final SwipeFile file;
   final bool isFront;
   final double stackIndex;
@@ -19,8 +24,9 @@ class SwipeCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final thumbnailCache = ref.watch(thumbnailCacheProvider);
     
     // Scale and offset for stacked cards
     final scale = 1.0 - (stackIndex * 0.05);
@@ -59,20 +65,11 @@ class SwipeCard extends StatelessWidget {
                 // Thumbnail area (70% of card)
                 Expanded(
                   flex: 7,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: file.typeColor(context).withOpacity(0.08),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppConstants.radiusCard),
-                      ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppConstants.radiusCard),
                     ),
-                    child: Center(
-                      child: Icon(
-                        file.typeIcon,
-                        size: 96,
-                        color: file.typeColor(context).withOpacity(0.7),
-                      ),
-                    ),
+                    child: _buildThumbnail(context, thumbnailCache),
                   ),
                 ),
                 
@@ -130,6 +127,109 @@ class SwipeCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(BuildContext context, Map<String, String?> thumbnailCache) {
+    // Show actual image preview for image files
+    if (file.type == FileType.image) {
+      return Container(
+        color: file.typeColor(context).withOpacity(0.08),
+        width: double.infinity,
+        child: Image.file(
+          File(file.uri),
+          fit: BoxFit.cover,
+          cacheWidth: 600, // limit decode size for performance
+          errorBuilder: (context, error, stackTrace) => _buildIconFallback(context),
+        ),
+      );
+    }
+
+    // Show cached video thumbnail
+    final cachedPath = thumbnailCache[file.uri];
+    if (cachedPath != null) {
+      return Container(
+        color: file.typeColor(context).withOpacity(0.08),
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.file(
+              File(cachedPath),
+              fit: BoxFit.cover,
+              cacheWidth: 600,
+              errorBuilder: (context, error, stackTrace) => _buildIconFallback(context),
+            ),
+            // Play icon overlay for videos
+            if (file.type == FileType.video)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Show thumbnail from model path if available
+    if (file.thumbnailPath != null) {
+      return Container(
+        color: file.typeColor(context).withOpacity(0.08),
+        width: double.infinity,
+        child: Image.file(
+          File(file.thumbnailPath!),
+          fit: BoxFit.cover,
+          cacheWidth: 600,
+          errorBuilder: (context, error, stackTrace) => _buildIconFallback(context),
+        ),
+      );
+    }
+
+    // Video/PDF still loading thumbnail — show icon with spinner
+    if ((file.type == FileType.video || file.type == FileType.pdf) &&
+        thumbnailCache.containsKey(file.uri)) {
+      return _buildIconFallback(context, showLoading: true);
+    }
+
+    return _buildIconFallback(context);
+  }
+
+  Widget _buildIconFallback(BuildContext context, {bool showLoading = false}) {
+    return Container(
+      color: file.typeColor(context).withOpacity(0.08),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              file.typeIcon,
+              size: 96,
+              color: file.typeColor(context).withOpacity(0.7),
+            ),
+            if (showLoading) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: file.typeColor(context).withOpacity(0.5),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

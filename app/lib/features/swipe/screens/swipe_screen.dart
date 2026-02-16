@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/file_utils.dart';
-import '../../../core/utils/haptics.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../folder_picker/providers/folder_provider.dart';
 import '../providers/swipe_files_provider.dart';
+import '../providers/thumbnail_provider.dart';
 import '../widgets/swipe_stack.dart';
 
 /// Main swipe screen for reviewing files
@@ -26,9 +26,24 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
   void initState() {
     super.initState();
     // Load files when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(swipeFilesProvider.notifier).loadFiles();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(swipeFilesProvider.notifier).loadFiles();
+      _preloadThumbnails();
     });
+  }
+
+  /// Preload thumbnails and precache images for upcoming files.
+  void _preloadThumbnails() {
+    final swipeState = ref.read(swipeFilesProvider);
+    if (swipeState.files.isEmpty) return;
+
+    final cacheNotifier = ref.read(thumbnailCacheProvider.notifier);
+    cacheNotifier.preload(swipeState.files, swipeState.currentIndex);
+    cacheNotifier.precacheImages(
+      swipeState.files,
+      swipeState.currentIndex,
+      context,
+    );
   }
 
   void _swipeLeft() {
@@ -45,6 +60,8 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
     } else {
       ref.read(swipeFilesProvider.notifier).swipeRight();
     }
+    // Preload thumbnails for next batch of files
+    _preloadThumbnails();
   }
 
   @override

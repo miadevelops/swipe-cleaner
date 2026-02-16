@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../../../core/utils/file_utils.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../swipe/models/swipe_file.dart';
 import '../../swipe/providers/swipe_files_provider.dart';
+import '../../swipe/providers/thumbnail_provider.dart';
 import '../providers/purchase_provider.dart';
 
 /// Review screen showing files marked for deletion
@@ -219,7 +222,7 @@ class ReviewScreen extends ConsumerWidget {
   }
 }
 
-class _FileGridItem extends StatelessWidget {
+class _FileGridItem extends ConsumerWidget {
   final SwipeFile file;
   final VoidCallback onTap;
 
@@ -229,25 +232,28 @@ class _FileGridItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final thumbnailCache = ref.watch(thumbnailCacheProvider);
+    final cachedPath = thumbnailCache[file.uri];
+
     return Material(
       color: file.typeColor(context).withOpacity(0.1),
       borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppConstants.radiusSm),
-        child: Container(
-          padding: const EdgeInsets.all(AppConstants.spacingXs),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                file.typeIcon,
-                color: file.typeColor(context),
-                size: 28,
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildPreview(context, cachedPath),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.spacingXxs,
+                vertical: 2,
               ),
-              const SizedBox(height: 2),
-              Text(
+              child: Text(
                 file.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -255,9 +261,60 @@ class _FileGridItem extends StatelessWidget {
                       fontSize: 9,
                     ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPreview(BuildContext context, String? cachedThumbnail) {
+    // Image files — load directly
+    if (file.type == FileType.image) {
+      return Image.file(
+        File(file.uri),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        cacheWidth: 200,
+        errorBuilder: (_, __, ___) => _iconFallback(context),
+      );
+    }
+
+    // Video with cached thumbnail
+    if (cachedThumbnail != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(
+            File(cachedThumbnail),
+            fit: BoxFit.cover,
+            width: double.infinity,
+            cacheWidth: 200,
+            errorBuilder: (_, __, ___) => _iconFallback(context),
+          ),
+          Center(
+            child: Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white.withOpacity(0.9),
+              size: 22,
+              shadows: const [
+                Shadow(blurRadius: 4, color: Colors.black54),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _iconFallback(context);
+  }
+
+  Widget _iconFallback(BuildContext context) {
+    return Center(
+      child: Icon(
+        file.typeIcon,
+        color: file.typeColor(context),
+        size: 28,
       ),
     );
   }

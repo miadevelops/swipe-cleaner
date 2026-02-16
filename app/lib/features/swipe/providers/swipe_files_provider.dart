@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../folder_picker/providers/folder_provider.dart';
 import '../../folder_picker/services/saf_service.dart';
 import '../models/swipe_file.dart';
+import 'thumbnail_provider.dart';
 
 /// Provider for SAF service
 final safServiceProvider = Provider((ref) => SAFService());
@@ -148,6 +149,8 @@ class SwipeFilesNotifier extends StateNotifier<SwipeFilesState> {
 
   /// Reset to beginning (after successful delete or folder change)
   void reset() {
+    // Clear thumbnail cache when switching contexts
+    _ref.read(thumbnailCacheProvider.notifier).clear();
     state = const SwipeFilesState();
   }
 

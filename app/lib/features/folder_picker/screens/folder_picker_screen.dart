@@ -67,6 +67,27 @@ class FolderPickerScreen extends ConsumerWidget {
 
               const Spacer(),
 
+              // Quick-select Downloads button
+              AppButton(
+                text: folderState.isLoading
+                    ? 'Opening...'
+                    : 'Select Downloads Folder',
+                icon: Icons.download_rounded,
+                isLoading: folderState.isLoading,
+                onPressed: folderState.isLoading
+                    ? null
+                    : () async {
+                        final success = await ref
+                            .read(folderProvider.notifier)
+                            .selectDownloads();
+                        if (success && context.mounted) {
+                          context.go('/swipe');
+                        }
+                      },
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
               // Error message
               if (folderState.error != null) ...[
                 Container(
@@ -94,11 +115,11 @@ class FolderPickerScreen extends ConsumerWidget {
                 const SizedBox(height: AppConstants.spacingMd),
               ],
 
-              // Open Folder Picker Button
-              AppButton(
+              // Open Folder Picker Button (for other folders)
+              AppButton.secondary(
                 text: folderState.isLoading
                     ? 'Opening...'
-                    : 'Open Folder Picker',
+                    : 'Choose Another Folder',
                 icon: Icons.folder_rounded,
                 isLoading: folderState.isLoading,
                 onPressed: folderState.isLoading

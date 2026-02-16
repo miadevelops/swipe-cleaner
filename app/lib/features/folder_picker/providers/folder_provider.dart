@@ -88,6 +88,40 @@ class FolderNotifier extends StateNotifier<FolderState> {
     state = state.copyWith(clearFolder: true);
   }
 
+  /// Selects the Downloads folder directly, bypassing SAF picker
+  Future<bool> selectDownloads() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final folderPath = await _safService.pickDownloadsFolder();
+
+      if (folderPath == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Storage permission is required to access Downloads. '
+              'Please grant it in Settings.',
+        );
+        return false;
+      }
+
+      final folderName = _safService.getFolderName(folderPath);
+
+      state = state.copyWith(
+        folderPath: folderPath,
+        folderName: folderName,
+        isLoading: false,
+      );
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to access Downloads: $e',
+      );
+      return false;
+    }
+  }
+
   /// Sets the folder directly (for testing or restoring state)
   void setFolder(String path) {
     final folderName = _safService.getFolderName(path);

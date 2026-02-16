@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/utils/file_utils.dart';
 import '../../swipe/models/swipe_file.dart';
@@ -13,6 +14,37 @@ class SAFService {
   Future<String?> pickFolder() async {
     final result = await FilePicker.platform.getDirectoryPath();
     return result;
+  }
+
+  /// Returns the path to the Downloads folder if accessible.
+  /// Requests MANAGE_EXTERNAL_STORAGE permission on Android 11+.
+  /// Returns null if permission is denied.
+  Future<String?> pickDownloadsFolder() async {
+    if (!Platform.isAndroid) {
+      // On non-Android platforms, fall back to the regular picker
+      return pickFolder();
+    }
+
+    final granted = await _requestStoragePermission();
+    if (!granted) return null;
+
+    const downloadsPath = '/storage/emulated/0/Download';
+    final dir = Directory(downloadsPath);
+    if (await dir.exists()) {
+      return downloadsPath;
+    }
+    return null;
+  }
+
+  /// Requests the appropriate storage permission.
+  /// Returns true if granted.
+  Future<bool> _requestStoragePermission() async {
+    // Android 11+ (API 30+): need MANAGE_EXTERNAL_STORAGE
+    final status = await Permission.manageExternalStorage.status;
+    if (status.isGranted) return true;
+
+    final result = await Permission.manageExternalStorage.request();
+    return result.isGranted;
   }
 
   /// Lists all files in the selected folder

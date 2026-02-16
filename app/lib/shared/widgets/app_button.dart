@@ -122,9 +122,11 @@ class AppButton extends StatelessWidget {
     }
 
     if (fullWidth) {
-      return SizedBox(
-        width: double.infinity,
-        height: AppConstants.minTouchTarget,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: double.infinity,
+          minHeight: AppConstants.minTouchTarget,
+        ),
         child: button,
       );
     }
@@ -154,7 +156,13 @@ class AppButton extends StatelessWidget {
         children: [
           Icon(icon, size: 20),
           const SizedBox(width: AppConstants.spacingXs),
-          Text(text),
+          Flexible(
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
         ],
       );
     }
