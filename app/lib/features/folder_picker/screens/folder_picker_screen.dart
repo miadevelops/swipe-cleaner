@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/polished_widgets.dart';
 import '../../swipe/providers/swipe_files_provider.dart';
 import '../../swipe/services/session_storage_service.dart';
 import '../providers/folder_provider.dart';
@@ -70,8 +72,7 @@ class _FolderPickerScreenState extends ConsumerState<FolderPickerScreen> {
     final folderState = ref.watch(folderProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
+    return GradientScaffold(
       appBar: AppBar(
         title: const Text('Select Folder'),
         backgroundColor: Colors.transparent,

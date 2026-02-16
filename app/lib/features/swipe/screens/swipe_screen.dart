@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/utils/file_utils.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/polished_widgets.dart';
 import '../../folder_picker/providers/folder_provider.dart';
 import '../providers/swipe_files_provider.dart';
 import '../providers/thumbnail_provider.dart';
@@ -103,8 +105,7 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
           context.go('/folder-picker');
         }
       },
-      child: Scaffold(
-      backgroundColor: AppColors.background(context),
+      child: GradientScaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

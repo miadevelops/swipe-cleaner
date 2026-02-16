@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/utils/file_utils.dart';
 import '../models/swipe_file.dart';
 import '../providers/thumbnail_provider.dart';
@@ -42,21 +42,21 @@ class SwipeCard extends ConsumerWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.surface(context),
+              gradient: AppGradients.card(context),
               borderRadius: BorderRadius.circular(AppConstants.radiusCard),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.lightAccent.withOpacity(0.1),
+                width: 1,
+              ),
               boxShadow: isFront
-                  ? [
-                      BoxShadow(
-                        offset: const Offset(0, 4),
-                        blurRadius: 16,
-                        color: Colors.black.withOpacity(0.12),
-                      ),
-                    ]
+                  ? AppShadows.card(context)
                   : [
                       BoxShadow(
                         offset: const Offset(0, 2),
                         blurRadius: 8,
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withOpacity(0.06),
                       ),
                     ],
             ),
