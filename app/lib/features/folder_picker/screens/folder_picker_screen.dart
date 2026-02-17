@@ -48,13 +48,12 @@ class _FolderPickerScreenState extends ConsumerState<FolderPickerScreen> {
           _savedSession!.folderName,
         );
 
-    // Navigate and restore
+    // Restore session BEFORE navigating so data is ready
+    await ref.read(swipeFilesProvider.notifier).restoreSession(_savedSession!);
+
+    // Navigate after restore is complete
     if (mounted) {
       context.go('/swipe');
-      // Restore after navigation
-      Future.microtask(() {
-        ref.read(swipeFilesProvider.notifier).restoreSession(_savedSession!);
-      });
     }
   }
 

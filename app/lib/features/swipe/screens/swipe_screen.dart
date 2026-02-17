@@ -27,9 +27,13 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load files when screen opens
+    // Load files when screen opens (skip if already loaded from restore)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(swipeFilesProvider.notifier).loadFiles();
+      final currentState = ref.read(swipeFilesProvider);
+      // Only load if we don't already have files (e.g., from session restore)
+      if (currentState.files.isEmpty && !currentState.isLoading) {
+        await ref.read(swipeFilesProvider.notifier).loadFiles();
+      }
       _preloadThumbnails();
     });
   }
