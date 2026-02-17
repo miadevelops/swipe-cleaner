@@ -29,8 +29,8 @@ class AppGradients {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFFFAFAFA),
-      Color(0xFFF5F3FF), // Very subtle violet tint
+      Color(0xFFFCFCFD), // Near white
+      Color(0xFFEEEBF8), // Noticeable violet tint
     ],
   );
 

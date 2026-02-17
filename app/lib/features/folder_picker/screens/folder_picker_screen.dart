@@ -153,6 +153,7 @@ class _FolderPickerScreenState extends ConsumerState<FolderPickerScreen> {
                 ),
               ),
 
+              const SizedBox(height: AppConstants.spacingXl),
               const Spacer(),
 
               // Quick-select Downloads button
@@ -337,6 +338,14 @@ class _SavedSessionCard extends StatelessWidget {
                     side: BorderSide(
                       color: AppColors.muted(context).withOpacity(0.3),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppConstants.spacingMd,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusButton,
+                      ),
+                    ),
                   ),
                   child: const Text('Discard'),
                 ),
@@ -347,6 +356,14 @@ class _SavedSessionCard extends StatelessWidget {
                   onPressed: onResume,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accent(context),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppConstants.spacingMd,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusButton,
+                      ),
+                    ),
                   ),
                   child: const Text('Resume'),
                 ),
